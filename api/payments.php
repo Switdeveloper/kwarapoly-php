@@ -1,8 +1,17 @@
 <?php
+// Prevent accidental HTML/PHP output from breaking JSON responses
+ini_set('display_errors', '0');
+ini_set('html_errors', '0');
+error_reporting(0);
+
 header('Content-Type: application/json');
 require_once '../config.php';
-$db = getDB();
-$method = $_SERVER['REQUEST_METHOD'];
+
+try {
+    $db = getDB();
+} catch (Throwable $e) {
+    exit;
+}
 
 function generateReceiptNo($db) {
     $year = date('Y');
@@ -17,6 +26,8 @@ function generateReceiptNo($db) {
     }
     return $prefix . str_pad($num, 5, '0', STR_PAD_LEFT);
 }
+
+$method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);

@@ -1,4 +1,9 @@
 <?php
+// Prevent accidental HTML/PHP output from breaking JSON responses
+ini_set('display_errors', '0');
+ini_set('html_errors', '0');
+error_reporting(0);
+
 header('Content-Type: application/json');
 header('Cache-Control: no-cache');
 require_once '../config.php';

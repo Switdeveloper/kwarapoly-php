@@ -1,7 +1,19 @@
 <?php
+// Prevent accidental HTML/PHP output from breaking JSON responses
+ini_set('display_errors', '0');
+ini_set('html_errors', '0');
+error_reporting(0);
+
 header('Content-Type: application/json');
 require_once '../config.php';
-$db = getDB();
+
+try {
+    $db = getDB();
+} catch (Throwable $e) {
+    echo json_encode(['success' => false, 'error' => 'Database unavailable.']);
+    exit;
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
@@ -55,7 +67,6 @@ if ($method === 'POST') {
                 $input['parent_phone'] ?? '',
                 $matric,
             ]);
-            $message = 'Student updated successfully!';
         } else {
             $stmt = $db->prepare("INSERT INTO students (matric_no, full_name, department, session, parent_name, parent_phone) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->execute([
@@ -66,12 +77,29 @@ if ($method === 'POST') {
                 $input['parent_name'] ?? '',
                 $input['parent_phone'] ?? '',
             ]);
-            $message = 'Student saved successfully!';
         }
         $stmt = $db->prepare("SELECT * FROM students WHERE matric_no = ?");
         $stmt->execute([$matric]);
         $student = $stmt->fetch();
-        echo json_encode(['success' => true, 'student' => $student, 'message' => $message]);
+        echo json_encode(['success' => true, 'student' => $student]);
+    } catch (PDOException $e) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+if ($method === 'PUT') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $id = intval($input['id'] ?? 0);
+    if (!$id) { http_response_code(400); echo json_encode(['success' => false, 'error' => 'Invalid ID.']); exit; }
+    try {
+        $stmt = $db->prepare("UPDATE students SET matric_no=?, full_name=?, department=?, session=?, parent_name=?, parent_phone=? WHERE id=?");
+        $stmt->execute([trim($input['matric_no']), trim($input['full_name']), trim($input['department']), $input['session'] ?? date('Y').'/'.(date('Y')+1), $input['parent_name'] ?? '', $input['parent_phone'] ?? '', $id]);
+        $stmt2 = $db->prepare("SELECT * FROM students WHERE id = ?");
+        $stmt2->execute([$id]);
+        $student = $stmt2->fetch();
+        echo json_encode(['success' => true, 'student' => $student]);
     } catch (PDOException $e) {
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);

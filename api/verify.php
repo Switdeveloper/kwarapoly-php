@@ -1,7 +1,16 @@
 <?php
+// Prevent accidental HTML/PHP output from breaking JSON responses
+ini_set('display_errors', '0');
+ini_set('html_errors', '0');
+error_reporting(0);
+
 header('Content-Type: application/json');
-require_once '../config.php';
-$db = getDB();
+try {
+    $db = getDB();
+} catch (Throwable $e) {
+    echo json_encode(['success' => false, 'error' => 'Database unavailable.']);
+    exit;
+}
 
 $receiptNo = trim($_GET['receipt_no'] ?? '');
 $matricNo  = trim($_GET['matric_no'] ?? '');

@@ -1,4 +1,9 @@
 <?php
+// Prevent accidental HTML/PHP output from breaking the binary QR image
+ini_set('display_errors', '0');
+ini_set('html_errors', '0');
+error_reporting(0);
+
 require_once '../config.php';
 header('Content-Type: image/png');
 $receiptNo = $_GET['receipt_no'] ?? '';
@@ -30,5 +35,6 @@ try {
     }
 } catch (Exception $e) {
     http_response_code(500);
-    echo "Error generating QR";
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'error' => 'Failed to generate QR code.']);
 }
