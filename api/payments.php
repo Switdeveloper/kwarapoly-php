@@ -29,7 +29,9 @@ if ($method === 'POST') {
         }
     }
     try {
-        $student = $db->prepare("SELECT * FROM students WHERE id = ?")->execute([intval($input['student_id'])])->fetch();
+        $stmt = $db->prepare("SELECT * FROM students WHERE id = ?");
+        $stmt->execute([intval($input['student_id'])]);
+        $student = $stmt->fetch();
         if (!$student) {
             http_response_code(404);
             echo json_encode(['success' => false, 'error' => 'Student not found.']);
@@ -46,7 +48,9 @@ if ($method === 'POST') {
             trim($input['term']),
             trim($input['session']),
         ]);
-        $payment = $db->prepare("SELECT * FROM payments WHERE id = ?")->execute([$db->lastInsertId()])->fetch();
+        $stmt = $db->prepare("SELECT * FROM payments WHERE id = ?");
+        $stmt->execute([$db->lastInsertId()]);
+        $payment = $stmt->fetch();
         echo json_encode(['success' => true, 'payment' => $payment]);
     } catch (PDOException $e) {
         http_response_code(400);

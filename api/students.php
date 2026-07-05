@@ -28,7 +28,9 @@ if ($method === 'POST') {
             $input['parent_phone'] ?? '',
         ]);
         $id = $db->lastInsertId();
-        $student = $db->prepare("SELECT * FROM students WHERE id = ?")->execute([$id])->fetch();
+        $stmt = $db->prepare("SELECT * FROM students WHERE id = ?");
+        $stmt->execute([$id]);
+        $student = $stmt->fetch();
         echo json_encode(['success' => true, 'student' => $student]);
     } catch (PDOException $e) {
         http_response_code(400);
@@ -44,7 +46,9 @@ if ($method === 'PUT') {
     try {
         $stmt = $db->prepare("UPDATE students SET matric_no=?, full_name=?, department=?, session=?, parent_name=?, parent_phone=? WHERE id=?");
         $stmt->execute([trim($input['matric_no']), trim($input['full_name']), trim($input['department']), $input['session'] ?? date('Y').'/'.(date('Y')+1), $input['parent_name'] ?? '', $input['parent_phone'] ?? '', $id]);
-        $student = $db->prepare("SELECT * FROM students WHERE id = ?")->execute([$id])->fetch();
+        $stmt2 = $db->prepare("SELECT * FROM students WHERE id = ?");
+        $stmt2->execute([$id]);
+        $student = $stmt2->fetch();
         echo json_encode(['success' => true, 'student' => $student]);
     } catch (PDOException $e) {
         http_response_code(400);
