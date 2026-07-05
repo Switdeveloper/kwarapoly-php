@@ -24,7 +24,7 @@ try {
         'success' => true,
         'total_students' => $totalStudents,
         'total_collections' => floatval($totalCollections),
-        'term_payments_count' => $termCount,
+        'term_payments' => $termCount,
         'pending_payments' => $pendingCount,
         'recent_payments' => $recentPayments,
         'current_session' => $currentSession,

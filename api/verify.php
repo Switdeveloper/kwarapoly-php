@@ -4,27 +4,62 @@ require_once '../config.php';
 $db = getDB();
 
 $receiptNo = trim($_GET['receipt_no'] ?? '');
+$matricNo  = trim($_GET['matric_no'] ?? '');
+$name      = trim($_GET['name'] ?? '');
 
-if (empty($receiptNo)) {
-    echo json_encode(['success' => false, 'error' => 'Receipt number is required.']);
+if ($receiptNo !== '') {
+    $stmt = $db->prepare("SELECT * FROM payments WHERE receipt_no = ?");
+    $stmt->execute([$receiptNo]);
+    $payment = $stmt->fetch();
+
+    if ($payment) {
+        echo json_encode([
+            'success' => true,
+            'found' => true,
+            'payments' => [$payment],
+            'count' => 1,
+            'message' => 'Receipt verified successfully.',
+        ]);
+    } else {
+        echo json_encode([
+            'success' => true,
+            'found' => false,
+            'payments' => [],
+            'count' => 0,
+            'message' => 'Receipt not found in database.',
+        ]);
+    }
     exit;
 }
 
-$payment = $db->prepare("SELECT * FROM payments WHERE receipt_no = ?")->execute([$receiptNo])->fetch();
+if ($matricNo !== '') {
+    $stmt = $db->prepare("SELECT * FROM payments WHERE matric_no = ? ORDER BY payment_date DESC");
+    $stmt->execute([$matricNo]);
+    $payments = $stmt->fetchAll();
 
-if ($payment) {
-    $student = $db->prepare("SELECT * FROM students WHERE id = ?")->execute([$payment['student_id']])->fetch();
     echo json_encode([
         'success' => true,
-        'found' => true,
-        'payment' => $payment,
-        'student' => $student,
+        'found' => count($payments) > 0,
+        'payments' => $payments,
+        'count' => count($payments),
+        'message' => count($payments) > 0 ? 'Payments found.' : 'No payments found for this matric number.',
     ]);
-} else {
-    echo json_encode([
-        'success' => true,
-        'found' => false,
-        'error' => 'Receipt not found in database. Not a valid record.',
-        'scanned_data' => ['receipt_no' => $receiptNo],
-    ]);
+    exit;
 }
+
+if ($name !== '') {
+    $stmt = $db->prepare("SELECT * FROM payments WHERE student_name LIKE ? ORDER BY payment_date DESC");
+    $stmt->execute(["%$name%"]);
+    $payments = $stmt->fetchAll();
+
+    echo json_encode([
+        'success' => true,
+        'found' => count($payments) > 0,
+        'payments' => $payments,
+        'count' => count($payments),
+        'message' => count($payments) > 0 ? 'Payments found.' : 'No payments found for this name.',
+    ]);
+    exit;
+}
+
+echo json_encode(['success' => false, 'error' => 'Provide receipt_no, matric_no, or name.']);

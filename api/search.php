@@ -4,7 +4,7 @@ require_once '../config.php';
 $db = getDB();
 
 $name = trim($_GET['name'] ?? '');
-$admission = trim($_GET['admission'] ?? '');
+$matric_no = trim($_GET['matric_no'] ?? '');
 $dateFrom = $_GET['date_from'] ?? '';
 $dateTo = $_GET['date_to'] ?? '';
 
@@ -15,9 +15,9 @@ if ($name !== '') {
     $sql .= " AND p.student_name LIKE ?";
     $params[] = "%$name%";
 }
-if ($admission !== '') {
+if ($matric_no !== '') {
     $sql .= " AND p.matric_no LIKE ?";
-    $params[] = "%$admission%";
+    $params[] = "%$matric_no%";
 }
 if ($dateFrom !== '') {
     $sql .= " AND DATE(p.payment_date) >= ?";
