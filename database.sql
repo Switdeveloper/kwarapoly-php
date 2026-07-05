@@ -5,8 +5,7 @@ CREATE DATABASE IF NOT EXISTS kwarapoly_fees CHARACTER SET utf8mb4 COLLATE utf8m
 USE kwarapoly_fees;
 
 CREATE TABLE IF NOT EXISTS students (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    matric_no VARCHAR(50) UNIQUE NOT NULL,
+    matric_no VARCHAR(50) PRIMARY KEY,
     full_name VARCHAR(200) NOT NULL,
     department VARCHAR(200) NOT NULL,
     session VARCHAR(20) NOT NULL DEFAULT '2025/2026',
@@ -19,7 +18,7 @@ CREATE TABLE IF NOT EXISTS students (
 CREATE TABLE IF NOT EXISTS payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     receipt_no VARCHAR(50) UNIQUE NOT NULL,
-    student_id INT NOT NULL,
+    student_matric VARCHAR(50) NOT NULL,
     student_name VARCHAR(200) NOT NULL,
     matric_no VARCHAR(50) NOT NULL,
     amount DECIMAL(12,2) NOT NULL,
@@ -27,7 +26,7 @@ CREATE TABLE IF NOT EXISTS payments (
     session VARCHAR(20) NOT NULL,
     payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     recorded_by VARCHAR(100) DEFAULT 'Admin',
-    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT
+    FOREIGN KEY (student_matric) REFERENCES students(matric_no) ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS users (

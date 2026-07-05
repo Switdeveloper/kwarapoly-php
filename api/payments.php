@@ -20,7 +20,7 @@ function generateReceiptNo($db) {
 
 if ($method === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
-    $required = ['student_id', 'amount', 'term', 'session'];
+    $required = ['student_matric', 'amount', 'term', 'session'];
     foreach ($required as $field) {
         if (empty($input[$field])) {
             http_response_code(400);
@@ -29,8 +29,8 @@ if ($method === 'POST') {
         }
     }
     try {
-        $stmt = $db->prepare("SELECT * FROM students WHERE id = ?");
-        $stmt->execute([intval($input['student_id'])]);
+        $stmt = $db->prepare("SELECT * FROM students WHERE matric_no = ?");
+        $stmt->execute([trim($input['student_matric'])]);
         $student = $stmt->fetch();
         if (!$student) {
             http_response_code(404);
@@ -38,10 +38,10 @@ if ($method === 'POST') {
             exit;
         }
         $receiptNo = generateReceiptNo($db);
-        $stmt = $db->prepare("INSERT INTO payments (receipt_no, student_id, student_name, matric_no, amount, term, session) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $db->prepare("INSERT INTO payments (receipt_no, student_matric, student_name, matric_no, amount, term, session) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             $receiptNo,
-            intval($input['student_id']),
+            $student['matric_no'],
             $student['full_name'],
             $student['matric_no'],
             floatval($input['amount']),
@@ -60,7 +60,7 @@ if ($method === 'POST') {
 }
 
 if ($method === 'GET') {
-    $payments = $db->query("SELECT p.*, s.full_name, s.matric_no FROM payments p LEFT JOIN students s ON p.student_id = s.id ORDER BY p.payment_date DESC")->fetchAll();
+    $payments = $db->query("SELECT p.*, s.full_name, s.department FROM payments p LEFT JOIN students s ON p.student_matric = s.matric_no ORDER BY p.payment_date DESC")->fetchAll();
     echo json_encode(['success' => true, 'payments' => $payments]);
     exit;
 }

@@ -334,7 +334,6 @@ $is_logged_in = isset($_SESSION['user_id']);
       <button onclick="closeStudentModal()" class="text-gray-400 hover:text-white text-xl"><i class="fas fa-times"></i></button>
     </div>
     <form id="studentForm" onsubmit="return saveStudent(event)">
-      <input type="hidden" id="studentId">
       <div class="mb-3">
         <label class="block text-gray-400 text-sm mb-1">Matriculation Number <span class="text-red-400">*</span></label>
         <input type="text" id="studentMatric" required placeholder="e.g. KW/2025/00123">
@@ -491,8 +490,8 @@ async function loadStudents() {
         '<td>' + escHtml(s.session) + '</td>' +
         '<td class="text-sm text-gray-400">' + (s.parent_name || '—') + '</td>' +
         '<td class="text-right">' +
-          '<button onclick="editStudent(' + s.id + ')" class="text-blue-400 hover:text-blue-300 mr-3 text-sm"><i class="fas fa-edit"></i></button>' +
-          '<button onclick="deleteStudent(' + s.id + ')" class="text-red-400 hover:text-red-300 text-sm"><i class="fas fa-trash"></i></button>' +
+          '<button onclick="editStudent(\'' + s.matric_no + '\')" class="text-blue-400 hover:text-blue-300 mr-3 text-sm"><i class="fas fa-edit"></i></button>' +
+          '<button onclick="deleteStudent(\'' + s.matric_no + '\')" class="text-red-400 hover:text-red-300 text-sm"><i class="fas fa-trash"></i></button>' +
         '</td>' +
       '</tr>'
     ).join('');
@@ -503,8 +502,8 @@ async function loadStudents() {
 }
 
 function openStudentModal(student = null) {
-  document.getElementById('studentId').value = student ? student.id : '';
   document.getElementById('studentMatric').value = student ? student.matric_no : '';
+  document.getElementById('studentMatric').readOnly = !!student;
   document.getElementById('studentName').value = student ? student.full_name : '';
   document.getElementById('studentDept').value = student ? student.department : '';
   document.getElementById('studentSession').value = student ? student.session : '2025/2026';
@@ -518,9 +517,9 @@ function closeStudentModal() {
   document.getElementById('studentModal').classList.remove('active');
 }
 
-async function editStudent(id) {
+async function editStudent(matric) {
   try {
-    const data = await API.get('api/students.php?id=' + id);
+    const data = await API.get('api/students.php?matric_no=' + encodeURIComponent(matric));
     if (data.student) openStudentModal(data.student);
   } catch (e) {
     showToast('Error loading student', 'error');
@@ -530,7 +529,6 @@ async function editStudent(id) {
 async function saveStudent(e) {
   e.preventDefault();
   const payload = {
-    id: document.getElementById('studentId').value || null,
     matric_no: document.getElementById('studentMatric').value.trim(),
     full_name: document.getElementById('studentName').value.trim(),
     department: document.getElementById('studentDept').value.trim(),
@@ -549,10 +547,10 @@ async function saveStudent(e) {
   return false;
 }
 
-async function deleteStudent(id) {
-  if (!confirm('Delete this student?')) return;
+async function deleteStudent(matric) {
+  if (!confirm('Delete student ' + matric + '?')) return;
   try {
-    const res = await API.post('api/students.php', { delete_id: id });
+    const res = await API.post('api/students.php', { delete_matric: matric });
     showToast(res.message || 'Student deleted');
     loadStudents();
   } catch (e) {
@@ -567,7 +565,7 @@ async function loadPaymentForm() {
     const select = document.getElementById('payStudentId');
     select.innerHTML = '<option value="">-- Select a student --</option>' +
       (data.students || []).map(s =>
-        '<option value="' + s.id + '">' + escHtml(s.matric_no) + ' — ' + escHtml(s.full_name) + '</option>'
+        '<option value="' + escHtml(s.matric_no) + '">' + escHtml(s.matric_no) + ' — ' + escHtml(s.full_name) + '</option>'
       ).join('');
   } catch (e) {
     showToast('Error loading students', 'error');
@@ -576,7 +574,8 @@ async function loadPaymentForm() {
 
 async function onStudentSelected(sel) {
   const info = document.getElementById('selectedStudentInfo');
-  const s = (await API.get('api/students.php?id=' + sel.value)).student;
+  if (!sel.value) { info.classList.add('hidden'); return; }
+  const s = (await API.get('api/students.php?matric_no=' + encodeURIComponent(sel.value))).student;
   if (s) {
     document.getElementById('ssiName').textContent = s.full_name;
     document.getElementById('ssiDept').textContent = s.department + ' — ' + s.session;
@@ -605,10 +604,10 @@ async function loadRecentPayments() {
 
 async function recordPayment(e) {
   e.preventDefault();
-  const studentId = document.getElementById('payStudentId').value;
-  if (!studentId) { showToast('Select a student', 'error'); return false; }
+  const studentMatric = document.getElementById('payStudentId').value;
+  if (!studentMatric) { showToast('Select a student', 'error'); return false; }
   const payload = {
-    student_id: studentId,
+    student_matric: studentMatric,
     amount: document.getElementById('payAmount').value,
     session: document.getElementById('paySession').value,
     term: document.getElementById('payTerm').value,
