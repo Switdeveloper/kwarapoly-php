@@ -1,18 +1,10 @@
-# XAMPP Setup Guide for kwarapoly-php
+# XAMPP Setup Guide
 
 ## Prerequisites
 
-- [XAMPP](https://www.apachefriends.org/) installed on Windows
+- [XAMPP](https://www.apachefriends.org/) installed
 
-## Step 1 — Copy the Project to XAMPP
-
-Move or copy the `kwarapoly-php` folder into:
-
-```
-C:\xampp\htdocs\
-```
-
-The final path should be:
+## Step 1 — Copy the Project
 
 ```
 C:\xampp\htdocs\kwarapoly-php\
@@ -21,32 +13,35 @@ C:\xampp\htdocs\kwarapoly-php\
 ## Step 2 — Import the Database
 
 - Open phpMyAdmin: `http://localhost/phpmyadmin`
-- Click **Databases** → create a new database (e.g., `kwarapoly`)
-- Click **Import** → choose the `database.sql` file from the project folder
+- Click **Import** → choose `database.sql` from the project folder
 - Click **Go**
 
-## Step 3 — Configure the Database Connection
+This creates the `kwarapoly_fees` database with all tables.
 
-Open `config.php` and update the database values to match your XAMPP setup:
+## Step 3 — Configure Database (if needed)
+
+Open `config.php` — defaults work for XAMPP:
 
 ```php
-$host     = '127.0.0.1';
-$port     = '3306';
-$database = 'kwarapoly';
-$username = 'root';
-$password = '';  // Default XAMPP has no password
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'kwarapoly_fees');
+define('DB_USER', 'root');
+define('DB_PASS', '');
 ```
 
-## Step 4 — Run It
+Only change these if your MySQL has different credentials.
 
-Open your browser and go to:
+## Step 4 — Run It
 
 ```
 http://localhost/kwarapoly-php/
 ```
 
+Default login: `admin` / `admin123`
+
 ## Troubleshooting
 
-- **Error connecting to database**: Make sure MySQL is running in the XAMPP Control Panel.
-- **Blank page**: Check `php.ini` to ensure `display_errors = On` for debugging.
-- **Port conflict**: If port 80 is in use, change Apache to use port 8080 and visit `http://localhost:8080/kwarapoly-php/`.
+- **MySQL not running**: Start MySQL in XAMPP Control Panel
+- **Port conflict**: If Apache port 80 is in use, change to 8080 in XAMPP and visit `http://localhost:8080/kwarapoly-php/`
+- **404 / blank page**: Make sure the folder is directly under `htdocs`
+- **PDO errors**: Ensure `php_pdo_mysql` extension is enabled in `php.ini`
